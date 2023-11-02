@@ -19,5 +19,5 @@ Route::get('/', function () {
 
 
 Route::post('/webhook',[\App\Http\Controllers\TelegramController::class,'webhook']);
-
-Route::post("/user",[\App\Http\Controllers\TelegramController::class,'user']);
+Route::get('/chat',[\App\Http\Controllers\ChatGPTController::class,'askToChatGpt']);
+Route::get("/user",[\App\Http\Controllers\TelegramController::class,'user']);

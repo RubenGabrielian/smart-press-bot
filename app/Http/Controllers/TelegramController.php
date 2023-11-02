@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\ChooseCategory;
 use App\Http\ChooseLanguage;
 use App\Http\ChooseResource;
+use App\Services\GPTService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use OpenAI\Laravel\Facades\OpenAI;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use App\Http\ConstantCategories;
@@ -15,6 +17,12 @@ class TelegramController extends Controller
 {
 
     public $language = 'grdon';
+
+    protected $chatGPT;
+
+    public function __construct(GPTService $chatGPT) {
+        $this->chatGPT = $chatGPT;
+    }
 
     public function chooseCategory($telegram, $chatId, $language)
     {
@@ -136,7 +144,8 @@ class TelegramController extends Controller
                         'text' => $selectedLanguage == "en" ? $responseEng : $responseRus,
                         'reply_markup' => $keyboardJson
                     ]);
-                }  if ($exploded_data[0] === "multi") {
+                }
+                if ($exploded_data[0] === "multi") {
                     $selectedOption = $exploded_data[2];
                     if ($exploded_data[1] == "finish") {
                         $chooseResource = new ChooseResource();
@@ -158,17 +167,34 @@ class TelegramController extends Controller
                             ]);
                         }
                     }
-                } else if ($exploded_data[0] === "rew") {
+                }
+                if($exploded_data[0] === "gpt") {
+                    $result = OpenAI::completions()->create([
+                        'model' => 'text-davinci-003',
+                        'max_tokens' => 50,
+                        'prompt' => "Please translate this text to russian 'hello my name is Ruben how are you?'",
+                    ]);
+
+                    $text =  $result['choices'][0]['text']; // an open-source, widely-used, server-side scripting language.
+
+                    $telegram->sendMessage([
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                    ]);
+                }
+                else if ($exploded_data[0] === "rew") {
                     if ($exploded_data[1] == "rewrite") {
                         $telegram->sendMessage([
                             'chat_id' => $chatId,
                             'text' => 'Apple spent some time focusing on games during Tuesday’s iPhone 15 launch event, earn Apple a place as a must-target destination for big budget, major studio game releases. The A17 Pro that’s powering the iPhone 15 Pro and Pro Max is at least on par with the kinds of processors that are powering devices like the Steam Deck, Asus ROG Ally, Lenovo Legion Go and many other portable form factor console PCs hitting the market and in development. And paired with devices like the Backbone One USB-C controller, which already announced support for the iPhone 15 immediately following its launch, the iPhone 15 Pro stands poised to make standalone gaming hardware redundant.',
                         ]);
                     }
-                } else if ($exploded_data[0] === "lang") {
+                }
+                else if ($exploded_data[0] === "lang") {
                     $this->language = $exploded_data[1];
                     $this->chooseCategory($telegram, $chatId, $exploded_data[1]);
-                } else if ($exploded_data[0] === "start") {
+                }
+                else if ($exploded_data[0] === "start") {
                     $chooseLang = new ChooseLanguage();
                     $chooseLang->ChooseLang($telegram, $chatId);
                 }
@@ -188,8 +214,12 @@ class TelegramController extends Controller
 
     public function user()
     {
-        $result = Http::post("https://onex.am/extension/getusers", ['userid', '3'])->json();
-        return $result;
+       $result = Http::get("https://newsapi.org/v2/top-headlines?country=us&apiKey=db46ac0a51c8455d8dd7ff7a8a84f613&pageSize=3");
+       foreach($result["articles"] as $articles) {
+
+       }
+
+
     }
 
 }

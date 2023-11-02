@@ -12,7 +12,7 @@ class ChooseResource
 
         $keyboardEng = [
             [
-                ['text' => 'Create Esse', 'callback_data' => "rew_create_esse_{$language}"],
+                ['text' => 'Create Esse', 'callback_data' => "gpt_create_esse_{$language}"],
                 ['text' => 'Highlight bullet points', 'callback_data' => "rew_highlight_{$language}"],
             ],
             [
